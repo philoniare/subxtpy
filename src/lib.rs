@@ -27,7 +27,7 @@ impl SubxtClient {
         })
     }
 
-    fn dynamic<'py>(
+    fn storage<'py>(
         &self,
         py: Python<'py>,
         pallet_name: String,
@@ -57,9 +57,32 @@ impl SubxtClient {
                     Ok(py_value)
                 }
                 None => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    "Account not found",
+                    "Storage not found",
                 )),
             }
+        })
+    }
+
+    fn constant<'py>(
+        &self,
+        py: Python<'py>,
+        pallet_name: String,
+        constant_name: String,
+    ) -> PyResult<&'py PyAny> {
+        let api = self.api.clone();
+        future_into_py(py, async move {
+            let constant_query = subxt::dynamic::constant(pallet_name, constant_name);
+
+            let value = api
+                .constants()
+                .at(&constant_query)
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+
+            let decoded = value.to_value().map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+            })?;
+            let py_value = Python::with_gil(|py| decoded_value_to_py_object(py, &decoded))?;
+            Ok(py_value)
         })
     }
 }
@@ -121,9 +144,6 @@ fn decoded_value_to_py_object(py: Python, decoded_value: &DecodedValue) -> PyRes
         },
     }
 }
-
-
-
 
 #[pymodule]
 fn subxtpy(_py: Python, m: &PyModule) -> PyResult<()> {
