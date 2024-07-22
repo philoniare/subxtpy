@@ -5,9 +5,7 @@ from subxtpy import SubxtClient
 @pytest.mark.asyncio
 async def test_fetch_events():
     client = await SubxtClient.new()
-
-    events = await client.get_events()
-    print("Events: ", events)
+    events = await client.events()
 
     # Check that events is a list
     assert isinstance(events, list)

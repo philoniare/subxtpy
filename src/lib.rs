@@ -86,7 +86,7 @@ impl SubxtClient {
         })
     }
 
-    fn get_events<'py>(&self, py: Python<'py>) -> PyResult<&'py PyAny> {
+    fn events<'py>(&self, py: Python<'py>) -> PyResult<&'py PyAny> {
         let api = self.api.clone();
         future_into_py(py, async move {
             let events = api
@@ -112,6 +112,38 @@ impl SubxtClient {
                 Ok(py_list.into())
             });
             py_events
+        })
+    }
+
+    fn runtime_api_call<'py>(
+        &self,
+        py: Python<'py>,
+        pallet_name: String,
+        entry_name: String,
+        account: Vec<u8>,
+    ) -> PyResult<&'py PyAny> {
+        let api = self.api.clone();
+        future_into_py(py, async move {
+            let runtime_api_call = subxt::dynamic::runtime_api_call(
+                &pallet_name,
+                &entry_name,
+                vec![Value::from_bytes(account)],
+            );
+
+            let nonce = api
+                .runtime_api()
+                .at_latest()
+                .await
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?
+                .call(runtime_api_call)
+                .await
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+
+            let decoded_nonce = nonce.to_value().map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+            })?;
+            let py_value = Python::with_gil(|py| decoded_value_to_py_object(py, &decoded_nonce))?;
+            Ok(py_value)
         })
     }
 }
