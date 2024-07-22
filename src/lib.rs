@@ -1,11 +1,55 @@
 use pyo3::prelude::*;
 use pyo3_asyncio::tokio::future_into_py;
-use serde_json;
 use std::sync::Arc;
 use subxt::{OnlineClient, PolkadotConfig};
-use subxt::dynamic::{At, Value, DecodedValue};
+use subxt::dynamic::{At, Value};
 use subxt::ext::scale_value::{ValueDef, Primitive, Composite};
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyDict, PyList, PyBytes};
+use scale_encode::EncodeAsType;
+use subxt::backend::StreamOfResults;
+use subxt::storage::{StorageKeyValuePair, DynamicAddress};
+use syn::token::parsing::keyword;
+
+#[pyclass]
+struct StorageIterator {
+    results: Arc<tokio::sync::Mutex<StreamOfResults<StorageKeyValuePair<DynamicAddress<Vec<Value>>>>>>,
+}
+
+#[pymethods]
+impl StorageIterator {
+    fn __aiter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    fn __anext__<'a>(&self, py: Python<'a>) -> PyResult<Option<PyObject>> {
+        let results = self.results.clone();
+        let future = pyo3_asyncio::tokio::future_into_py(py, async move {
+            let mut results = results.lock().await;
+            if let Some(result) = results.next().await {
+                let key_val = result.map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+                let py_dict = Python::with_gil(|py| {
+                    let dict = PyDict::new(py);
+                    dict.set_item("key_bytes", PyBytes::new(py, &key_val.key_bytes))?;
+
+                    let py_keys = PyList::new(py, key_val.keys.iter().map(|k| {
+                        let new_k = k.clone().map_context(|_| 0u32);
+                        decoded_value_to_py_object(py, &new_k).unwrap()
+                    }));
+                    dict.set_item("keys", py_keys)?;
+
+                    // Convert value to PyObject
+                    let py_value = decoded_value_to_py_object(py, &key_val.value.to_value().unwrap())?;
+                    dict.set_item("value", py_value)?;
+                    Ok::<PyObject, PyErr>(dict.to_object(py))
+                })?;
+                Ok(Some(py_dict))
+            } else {
+                Err(PyErr::new::<pyo3::exceptions::PyStopAsyncIteration, _>("Iterator exhausted"))
+            }
+        });
+        Ok(Some(future?.into()))
+    }
+}
 
 #[pyclass]
 struct SubxtClient {
@@ -146,6 +190,31 @@ impl SubxtClient {
             Ok(py_value)
         })
     }
+
+    fn storage_iter<'py>(
+        &self,
+        py: Python<'py>,
+        pallet_name: String,
+        entry_name: String,
+        key: Vec<u8>,
+    ) -> PyResult<&'py PyAny> {
+        let api = self.api.clone();
+        future_into_py(py, async move {
+            let storage_query = subxt::dynamic::storage(pallet_name, entry_name, vec![Value::from_bytes(key)]);
+
+            let results = api
+                .storage()
+                .at_latest()
+                .await
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?
+                .iter(storage_query)
+                .await
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+
+            Ok(StorageIterator { results: Arc::new(tokio::sync::Mutex::new(results)) })
+        })
+    }
+
 }
 
 fn composite_to_py_object(py: Python, composite: &Composite<u32>) -> PyResult<PyObject> {
@@ -168,7 +237,18 @@ fn composite_to_py_object(py: Python, composite: &Composite<u32>) -> PyResult<Py
     Ok(py_dict.into())
 }
 
-fn decoded_value_to_py_object(py: Python, decoded_value: &DecodedValue) -> PyResult<PyObject> {
+fn primitive_to_py_object(py: Python, primitive: &Primitive) -> PyResult<PyObject> {
+    match primitive {
+        Primitive::Bool(b) => Ok(b.to_object(py)),
+        Primitive::Char(c) => Ok(c.to_object(py)),
+        Primitive::String(s) => Ok(s.to_object(py)),
+        Primitive::U128(u) => Ok(u.to_object(py)),
+        Primitive::I128(i) => Ok(i.to_object(py)),
+        _ => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Unsupported primitive type")),
+    }
+}
+
+fn decoded_value_to_py_object(py: Python, decoded_value: &Value<u32>) -> PyResult<PyObject> {
     match &decoded_value.value {
         ValueDef::Composite(composite) => composite_to_py_object(py, composite),
         ValueDef::Variant(variant) => {
@@ -197,19 +277,13 @@ fn decoded_value_to_py_object(py: Python, decoded_value: &DecodedValue) -> PyRes
             let bits: Vec<bool> = bit_sequence.iter().collect();
             Ok(PyList::new(py, bits).into())
         }
-        ValueDef::Primitive(primitive) => match primitive {
-            Primitive::Bool(b) => Ok(b.to_object(py)),
-            Primitive::Char(c) => Ok(c.to_object(py)),
-            Primitive::String(s) => Ok(s.to_object(py)),
-            Primitive::U128(u) => Ok(u.to_object(py)),
-            Primitive::I128(i) => Ok(i.to_object(py)),
-            _ => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Unsupported primitive type")),
-        },
+        ValueDef::Primitive(primitive) => primitive_to_py_object(py, primitive)
     }
 }
 
 #[pymodule]
 fn subxtpy(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<SubxtClient>()?;
+    m.add_class::<StorageIterator>()?;
     Ok(())
 }
