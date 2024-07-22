@@ -85,29 +85,60 @@ impl SubxtClient {
             Ok(py_value)
         })
     }
+
+    fn get_events<'py>(&self, py: Python<'py>) -> PyResult<&'py PyAny> {
+        let api = self.api.clone();
+        future_into_py(py, async move {
+            let events = api
+                .events()
+                .at_latest()
+                .await
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+
+            let events_vec: Vec<_> = events.iter().collect::<Result<Vec<_>, _>>()
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+
+            let py_events: PyResult<PyObject> = Python::with_gil(|py| {
+                let py_list = PyList::new(py, events_vec.iter().map(|event| {
+                    let py_event = PyDict::new(py);
+                    py_event.set_item("pallet", event.pallet_name()).unwrap();
+                    py_event.set_item("variant", event.variant_name()).unwrap();
+                    py_event.set_item(
+                        "fields",
+                        composite_to_py_object(py, &event.field_values().unwrap()).unwrap(),
+                    ).unwrap();
+                    py_event.to_object(py)
+                }));
+                Ok(py_list.into())
+            });
+            py_events
+        })
+    }
+}
+
+fn composite_to_py_object(py: Python, composite: &Composite<u32>) -> PyResult<PyObject> {
+    let py_dict = PyDict::new(py);
+
+    match composite {
+        Composite::Named(named) => {
+            for (key, value) in named.iter() {
+                let py_value = decoded_value_to_py_object(py, value)?;
+                py_dict.set_item(key, py_value)?;
+            }
+        }
+        Composite::Unnamed(unnamed) => {
+            for (index, value) in unnamed.iter().enumerate() {
+                let py_value = decoded_value_to_py_object(py, value)?;
+                py_dict.set_item(index.to_string(), py_value)?;
+            }
+        }
+    }
+    Ok(py_dict.into())
 }
 
 fn decoded_value_to_py_object(py: Python, decoded_value: &DecodedValue) -> PyResult<PyObject> {
     match &decoded_value.value {
-        ValueDef::Composite(composite) => {
-            let py_dict = PyDict::new(py);
-
-            match composite {
-                Composite::Named(named) => {
-                    for (key, value) in named.iter() {
-                        let py_value = decoded_value_to_py_object(py, value)?;
-                        py_dict.set_item(key, py_value)?;
-                    }
-                }
-                Composite::Unnamed(unnamed) => {
-                    for (index, value) in unnamed.iter().enumerate() {
-                        let py_value = decoded_value_to_py_object(py, value)?;
-                        py_dict.set_item(index.to_string(), py_value)?;
-                    }
-                }
-            }
-            Ok(py_dict.into())
-        }
+        ValueDef::Composite(composite) => composite_to_py_object(py, composite),
         ValueDef::Variant(variant) => {
             let py_dict = PyDict::new(py);
             py_dict.set_item("variant_name", variant.name.clone())?;
