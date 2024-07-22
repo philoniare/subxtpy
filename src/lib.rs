@@ -8,7 +8,11 @@ use pyo3::types::{PyDict, PyList, PyBytes};
 use scale_encode::EncodeAsType;
 use subxt::backend::StreamOfResults;
 use subxt::storage::{StorageKeyValuePair, DynamicAddress};
-use syn::token::parsing::keyword;
+use subxt_signer::sr25519::dev;
+use subxt::config::polkadot::PolkadotExtrinsicParamsBuilder as Params;
+
+#[subxt::subxt(runtime_metadata_path = "./artifacts/metadata.scale")]
+pub mod polkadot {}
 
 #[pyclass]
 struct StorageIterator {
@@ -215,6 +219,20 @@ impl SubxtClient {
         })
     }
 
+    fn sign_and_submit<'py>(
+        &self,
+        py: Python<'py>,
+    ) -> PyResult<&'py PyAny> {
+        let api = self.api.clone();
+        future_into_py(py, async move {
+            let dest = dev::bob().public_key().into();
+            let balance_transfer_tx = polkadot::tx().balances().transfer_allow_death(dest, 10_000);
+            let from = dev::alice();
+            let tx_params = Params::new().build();
+            let hash = api.tx().sign_and_submit(&balance_transfer_tx, &from, tx_params).await.map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+            Ok(hash.0)
+        })
+    }
 }
 
 fn composite_to_py_object(py: Python, composite: &Composite<u32>) -> PyResult<PyObject> {
@@ -273,7 +291,6 @@ fn decoded_value_to_py_object(py: Python, decoded_value: &Value<u32>) -> PyResul
             Ok(py_dict.into())
         }
         ValueDef::BitSequence(bit_sequence) => {
-            // Assuming bit_sequence.bits() returns an iterator over the bits
             let bits: Vec<bool> = bit_sequence.iter().collect();
             Ok(PyList::new(py, bits).into())
         }
