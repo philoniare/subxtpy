@@ -1,104 +1,64 @@
-mod storage_fetch;
-
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
-use subxt::{OnlineClient as SOnlineClient, PolkadotConfig};
-use subxt_signer::sr25519::dev;
-use tokio::runtime::Runtime;
+use pyo3_asyncio::tokio::future_into_py;
+use std::sync::Arc;
 use subxt::dynamic::{At, Value};
+use subxt::{OnlineClient, PolkadotConfig};
 
 #[pyclass]
-struct OnlineClient {
-    client: Option<SOnlineClient<PolkadotConfig>>,
+struct SubxtClient {
+    api: Arc<OnlineClient<PolkadotConfig>>,
 }
-
-#[subxt::subxt(runtime_metadata_path = "./artifacts/metadata.scale")]
-pub mod polkadot {}
 
 #[pymethods]
-impl OnlineClient {
-    #[new]
-    pub fn new(py: Python) -> Self {
-        Self { client: None }
+impl SubxtClient {
+    #[staticmethod]
+    #[pyo3(name = "new")]
+    fn py_new(py: Python<'_>) -> PyResult<&PyAny> {
+        future_into_py(py, async {
+            match OnlineClient::<PolkadotConfig>::new().await {
+                Ok(api) => Ok(SubxtClient { api: Arc::new(api) }),
+                Err(e) => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                    e.to_string(),
+                )),
+            }
+        })
     }
 
-    fn initialize(&mut self, py: Python) -> PyResult<()> {
-        py.allow_threads(move || {
-            let rt = Runtime::new().unwrap();
-            rt.block_on(async {
-                let client = SOnlineClient::<PolkadotConfig>::new().await.unwrap();
-                self.client = Some(client);
-            });
-        });
-        Ok(())
-    }
+    fn fetch_free_balance<'py>(&self, py: Python<'py>, account: Vec<u8>) -> PyResult<&'py PyAny> {
+        let api = self.api.clone();
+        pyo3_asyncio::tokio::future_into_py(py, async move {
+            let storage_query =
+                subxt::dynamic::storage("System", "Account", vec![Value::from_bytes(account)]);
 
-    fn constants(&self) -> PyResult<()> {
-        let constant_query = subxt::dynamic::constant("System", "BlockHashCount");
-        let value = self
-            .client
-            .as_ref()
-            .unwrap()
-            .constants()
-            .at(&constant_query)
-            .unwrap();
-        println!("value: {:?}", value.encoded());
-        Ok(())
-    }
+            let result = api
+                .storage()
+                .at_latest()
+                .await
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?
+                .fetch(&storage_query)
+                .await
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-    #[getter]
-    fn block_length(&self) -> PyResult<String> {
-        let rt = Runtime::new().unwrap();
-        let result = rt.block_on(async move {
-            let constant_query = polkadot::constants().system().block_length();
-            let value = self
-                .client
-                .as_ref()
-                .unwrap()
-                .constants()
-                .at(&constant_query)
-                .unwrap();
+            let value = result
+                .ok_or_else(|| {
+                    PyErr::new::<pyo3::exceptions::PyValueError, _>("Account not found")
+                })?
+                .to_value()
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-            Ok(format!("{value:?}"))
-        });
-        result
-    }
+            let free_balance = value.at("data").and_then(|v| v.at("free")).ok_or_else(|| {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    "Free balance not found in account data",
+                )
+            })?;
 
-    fn storagy_query(&self, py: Python) -> PyResult<()> {
-        let account = dev::alice().public_key();
-        let storage_query =
-            subxt::dynamic::storage("System", "Account", vec![Value::from_bytes(account)]);
-
-        py.allow_threads(move || {
-            let rt = Runtime::new().unwrap();
-            rt.block_on(async {
-                let result = self.client.as_ref().unwrap()
-                    .storage()
-                    .at_latest()
-                    .await.unwrap()
-                    .fetch(&storage_query)
-                    .await.unwrap();
-                let value = result.unwrap().to_value().unwrap();
-
-                println!("Alice has free balance: {:?}", value.at("data").at("free"));
-            });
-        });
-        Ok(())
+            Ok(free_balance.to_string())
+        })
     }
 }
 
-// fn register_polkadot_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-//     let child_module = PyModule::new_bound(parent_module.py(), "child_module")?;
-//     child_module.add_function(wrap_pyfunction!(block_length, &child_module)?)?;
-//     parent_module.add_submodule(&child_module)?;
-//     Ok(())
-// }
-
 #[pymodule]
-fn subxtpy(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // register_polkadot_module(m)?;
-    m.add_class::<OnlineClient>()?;
-    // m.add_wrapped(wrap_pyfunction!(encoded))?;
-    // m.add_wrapped(wrap_pyfunction!(to_value))?;
+fn subxtpy(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_class::<SubxtClient>()?;
     Ok(())
 }
