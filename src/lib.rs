@@ -1,8 +1,11 @@
 use pyo3::prelude::*;
 use pyo3_asyncio::tokio::future_into_py;
+use serde_json;
 use std::sync::Arc;
-use subxt::dynamic::{At, Value};
 use subxt::{OnlineClient, PolkadotConfig};
+use subxt::dynamic::{At, Value, DecodedValue};
+use subxt::ext::scale_value::{ValueDef, Primitive, Composite};
+use pyo3::types::{PyDict, PyList};
 
 #[pyclass]
 struct SubxtClient {
@@ -24,11 +27,17 @@ impl SubxtClient {
         })
     }
 
-    fn fetch_free_balance<'py>(&self, py: Python<'py>, account: Vec<u8>) -> PyResult<&'py PyAny> {
+    fn dynamic<'py>(
+        &self,
+        py: Python<'py>,
+        pallet_name: String,
+        entry_name: String,
+        key: Vec<u8>,
+    ) -> PyResult<&'py PyAny> {
         let api = self.api.clone();
-        pyo3_asyncio::tokio::future_into_py(py, async move {
+        future_into_py(py, async move {
             let storage_query =
-                subxt::dynamic::storage("System", "Account", vec![Value::from_bytes(account)]);
+                subxt::dynamic::storage(pallet_name, entry_name, vec![Value::from_bytes(key)]);
 
             let result = api
                 .storage()
@@ -39,23 +48,82 @@ impl SubxtClient {
                 .await
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-            let value = result
-                .ok_or_else(|| {
-                    PyErr::new::<pyo3::exceptions::PyValueError, _>("Account not found")
-                })?
-                .to_value()
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
-
-            let free_balance = value.at("data").and_then(|v| v.at("free")).ok_or_else(|| {
-                PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    "Free balance not found in account data",
-                )
-            })?;
-
-            Ok(free_balance.to_string())
+            match result {
+                Some(value) => {
+                    let decoded = value.to_value().map_err(|e| {
+                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+                    })?;
+                    let py_value = Python::with_gil(|py| decoded_value_to_py_object(py, &decoded))?;
+                    Ok(py_value)
+                }
+                None => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    "Account not found",
+                )),
+            }
         })
     }
 }
+
+fn decoded_value_to_py_object(py: Python, decoded_value: &DecodedValue) -> PyResult<PyObject> {
+    match &decoded_value.value {
+        ValueDef::Composite(composite) => {
+            let py_dict = PyDict::new(py);
+
+            match composite {
+                Composite::Named(named) => {
+                    for (key, value) in named.iter() {
+                        let py_value = decoded_value_to_py_object(py, value)?;
+                        py_dict.set_item(key, py_value)?;
+                    }
+                }
+                Composite::Unnamed(unnamed) => {
+                    for (index, value) in unnamed.iter().enumerate() {
+                        let py_value = decoded_value_to_py_object(py, value)?;
+                        py_dict.set_item(index.to_string(), py_value)?;
+                    }
+                }
+            }
+            Ok(py_dict.into())
+        }
+        ValueDef::Variant(variant) => {
+            let py_dict = PyDict::new(py);
+            py_dict.set_item("variant_name", variant.name.clone())?;
+
+            match &variant.values {
+                Composite::Named(named) => {
+                    let py_values = PyDict::new(py);
+                    for (key, value) in named.iter() {
+                        let py_value = decoded_value_to_py_object(py, value)?;
+                        py_values.set_item(key, py_value)?;
+                    }
+                    py_dict.set_item("values", py_values)?;
+                }
+                Composite::Unnamed(unnamed) => {
+                    let py_values = PyList::new(py, unnamed.iter().map(|v| decoded_value_to_py_object(py, v).unwrap()));
+                    py_dict.set_item("values", py_values)?;
+                }
+            }
+
+            Ok(py_dict.into())
+        }
+        ValueDef::BitSequence(bit_sequence) => {
+            // Assuming bit_sequence.bits() returns an iterator over the bits
+            let bits: Vec<bool> = bit_sequence.iter().collect();
+            Ok(PyList::new(py, bits).into())
+        }
+        ValueDef::Primitive(primitive) => match primitive {
+            Primitive::Bool(b) => Ok(b.to_object(py)),
+            Primitive::Char(c) => Ok(c.to_object(py)),
+            Primitive::String(s) => Ok(s.to_object(py)),
+            Primitive::U128(u) => Ok(u.to_object(py)),
+            Primitive::I128(i) => Ok(i.to_object(py)),
+            _ => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Unsupported primitive type")),
+        },
+    }
+}
+
+
+
 
 #[pymodule]
 fn subxtpy(_py: Python, m: &PyModule) -> PyResult<()> {
