@@ -2,10 +2,9 @@ use pyo3::prelude::*;
 use pyo3_asyncio::tokio::future_into_py;
 use std::sync::Arc;
 use subxt::{OnlineClient, PolkadotConfig};
-use subxt::dynamic::{At, Value};
+use subxt::dynamic::{Value};
 use subxt::ext::scale_value::{ValueDef, Primitive, Composite};
 use pyo3::types::{PyDict, PyList, PyBytes};
-use scale_encode::EncodeAsType;
 use subxt::backend::StreamOfResults;
 use subxt::storage::{StorageKeyValuePair, DynamicAddress};
 use subxt_signer::sr25519::dev;
@@ -67,6 +66,19 @@ impl SubxtClient {
     fn py_new(py: Python<'_>) -> PyResult<&PyAny> {
         future_into_py(py, async {
             match OnlineClient::<PolkadotConfig>::new().await {
+                Ok(api) => Ok(SubxtClient { api: Arc::new(api) }),
+                Err(e) => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                    e.to_string(),
+                )),
+            }
+        })
+    }
+
+    #[staticmethod]
+    #[pyo3(name = "from_url")]
+    fn from_url(py: Python<'_>, url: String) -> PyResult<&PyAny> {
+        future_into_py(py, async {
+            match OnlineClient::<PolkadotConfig>::from_url(url).await {
                 Ok(api) => Ok(SubxtClient { api: Arc::new(api) }),
                 Err(e) => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
                     e.to_string(),
