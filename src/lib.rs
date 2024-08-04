@@ -1,4 +1,3 @@
-// Import necessary modules and dependencies
 use pyo3::prelude::*;
 use pyo3_asyncio::tokio::future_into_py;
 use std::sync::Arc;
@@ -13,7 +12,12 @@ use subxt_signer::sr25519::{Keypair as STKeypair, PublicKey, Signature};
 use subxt::tx::Signer as SignerT;
 use subxt::Config;
 use hex;
-use hex::FromHex;
+
+#[derive(Clone)]
+enum AddressUse {
+    Storage,
+    Extrinsic,
+}
 
 #[pyclass]
 #[derive(Clone)]
@@ -145,12 +149,16 @@ impl SubxtClient {
         py: Python<'py>,
         pallet_name: String,
         entry_name: String,
-        key: Vec<u8>,
+        key: &PyList
     ) -> PyResult<&'py PyAny> {
         let api = self.api.clone();
+        let values: Vec<Value> = key
+            .iter()
+            .map(|item| py_object_to_value(item, AddressUse::Storage))
+            .collect::<PyResult<Vec<Value>>>()?;
         future_into_py(py, async move {
             let storage_query =
-                subxt::dynamic::storage(pallet_name, entry_name, vec![Value::from_bytes(key)]);
+                subxt::dynamic::storage(pallet_name, entry_name, values);
 
             let result = api
                 .storage()
@@ -236,14 +244,18 @@ impl SubxtClient {
         py: Python<'py>,
         pallet_name: String,
         entry_name: String,
-        account: Vec<u8>,
+        key: &PyList,
     ) -> PyResult<&'py PyAny> {
         let api = self.api.clone();
+        let values: Vec<Value> = key
+            .iter()
+            .map(|item| py_object_to_value(item, AddressUse::Storage))
+            .collect::<PyResult<Vec<Value>>>()?;
         future_into_py(py, async move {
             let runtime_api_call = subxt::dynamic::runtime_api_call(
                 &pallet_name,
                 &entry_name,
-                vec![Value::from_bytes(account)],
+                values,
             );
 
             let nonce = api
@@ -300,7 +312,7 @@ impl SubxtClient {
         let api = self.api.clone();
         let values: Vec<Value> = payload
             .iter()
-            .map(py_object_to_value)
+            .map(|item| py_object_to_value(item, AddressUse::Extrinsic))
             .collect::<PyResult<Vec<Value>>>()?;
         future_into_py(py, async move {
             let tx_params = Params::new().build();
@@ -313,7 +325,7 @@ impl SubxtClient {
 }
 
 
-fn py_object_to_value(item: &PyAny) -> PyResult<Value> {
+fn py_object_to_value(item: &PyAny, address_use: AddressUse) -> PyResult<Value> {
     if let Ok(bytes) = item.downcast::<PyBytes>() {
         let bytes = bytes.as_bytes();
         Ok(Value::from_bytes(bytes.to_vec()))
@@ -325,15 +337,18 @@ fn py_object_to_value(item: &PyAny) -> PyResult<Value> {
         Ok(Value::bool(bool_val))
     } else if let Ok(string_val) = item.downcast::<PyString>() {
         let s = string_val.to_string();
-        if s.len() == 64 {
-            let public_key_bytes = <[u8; 32]>::from_hex(s).expect("Invalid hex string");
-            let dest = subxt::utils::AccountId32::from(public_key_bytes);
-            Ok(Value::unnamed_variant("Id", vec![Value::from_bytes(dest.0)]))
+        if s.len() == 64 && s.chars().all(|c| c.is_ascii_hexdigit()) {
+            let bytes = hex::decode(&s)
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid hex string: {}", e)))?;
+            match address_use {
+                AddressUse::Storage => Ok(Value::from_bytes(bytes)),
+                AddressUse::Extrinsic => Ok(Value::unnamed_variant("Id", vec![Value::from_bytes(bytes)])),
+            }
         } else {
             Ok(Value::from_bytes(string_val.to_string().into_bytes()))
         }
     } else if let Ok(list_val) = item.downcast::<PyList>() {
-        let values: PyResult<Vec<Value>> = list_val.iter().map(py_object_to_value).collect();
+        let values: PyResult<Vec<Value>> = list_val.iter().map(|item| py_object_to_value(item, address_use.clone())).collect();
         Ok(Value::unnamed_composite(values?))
     } else {
         Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Unsupported type in payload"))

@@ -11,10 +11,8 @@ async def test_subxt_client_creation():
 async def test_fetch_free_balance():
     client = await SubxtClient.new()
 
-    # Alice's public key (in hex format)
-    alice_public_key = bytes.fromhex('d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d')
-
-    account_info = await client.storage("System", "Account", alice_public_key)
+    account_info = await client.storage("System", "Account",
+                                        ["d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"])
     assert isinstance(account_info, dict)
 
     assert 'data' in account_info
