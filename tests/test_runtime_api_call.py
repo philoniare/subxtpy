@@ -12,5 +12,4 @@ async def test_fetch_account_nonce():
     nonce = await client.runtime_api_call("AccountNonceApi", "account_nonce", alice_public_key)
     print("Account nonce: ", nonce)
 
-    # Further assertions can be added based on the expected structure and type of the nonce value
     assert isinstance(nonce, int)

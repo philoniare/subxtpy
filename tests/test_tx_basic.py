@@ -1,6 +1,6 @@
 import pytest
-import asyncio
 from subxtpy import SubxtClient
+
 @pytest.mark.asyncio
 async def test_transfer_balance():
     # Test balance transfer from Alice to Bob
