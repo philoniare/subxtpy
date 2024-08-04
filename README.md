@@ -87,6 +87,12 @@ For more details regarding utilizing `subxtpy`, please visit the [documentation]
 We wrote some tests by following the examples provided in the official [subxt repo](https://github.com/paritytech/subxt/tree/master/subxt/examples).
 These tests can be run by running:
 
+1. [Node template](https://github.com/substrate-developer-hub/substrate-node-template) locally:
+```bash
+cargo build
+./target/release/node-template --dev
+```
+2. Running the python tests, which connect to the local node: 
 ```bash
 pytest
 ```
