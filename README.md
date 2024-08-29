@@ -17,12 +17,13 @@
 
 ### Installation
 
-The package will be published as soon as we have a stable version with the above feature set. For now, you can  build
-the package locally by first installing `maturin` with:
+The package has been published on [pypi](https://pypi.org/project/subxtpy/) and can be installed by running:
 ```bash
-pipx install maturin
+pip install subxtpy
 ```
-and then running following command:
+### Local Testing 
+To build the library locally, [maturin](https://pypi.org/project/maturin/) needs to be installed. The following command will
+build the package locally:
 ```bash
 maturin develop
 ```
