@@ -88,10 +88,14 @@ For more details regarding utilizing `subxtpy`, please visit the [documentation]
 We wrote some tests by following the examples provided in the official [subxt repo](https://github.com/paritytech/subxt/tree/master/subxt/examples).
 These tests can be run by running:
 
-1. [Node template](https://github.com/substrate-developer-hub/substrate-node-template) locally:
+1. [Node template](https://github.com/paritytech/polkadot-sdk-minimal-template) locally:
    ```bash
-   cargo build
-   ./target/release/node-template --dev
+   cargo build --package minimal-template-node --release
+   ./target/release/minimal-template-node --dev
+   
+   # docker version:
+   docker build . -t polkadot-sdk-minimal-template
+   docker run -p 9944:9944 --rm polkadot-sdk-minimal-template --dev --rpc-external
    ```
 2. Running the python tests, which connect to the local node: 
     ```bash
