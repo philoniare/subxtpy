@@ -99,6 +99,7 @@ These tests can be run by running:
    ```
 2. Running the python tests, which connect to the local node: 
     ```bash
+    pip install -r requirements.txt
     pytest
     ```
 
