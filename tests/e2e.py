@@ -25,4 +25,11 @@ async def main():
     transfer_tx_hash = await client.sign_and_submit(from_keypair, "System", "remark", remark_payload)
     print("Remark tx hash:", transfer_tx_hash)
 
+    subscription = await client.subscribe_new_blocks()
+
+    async for block in subscription:
+        print(block)
+        break
+
+
 asyncio.run(main())

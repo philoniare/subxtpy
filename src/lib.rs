@@ -12,6 +12,8 @@ use subxt_signer::sr25519::{Keypair as STKeypair, PublicKey, Signature};
 use subxt::tx::Signer as SignerT;
 use subxt::Config;
 use hex;
+use subxt::blocks::Block;
+use subxt::config::Header;
 
 #[derive(Clone)]
 enum AddressUse {
@@ -27,7 +29,16 @@ struct Keypair {
 
 #[pymethods]
 impl Keypair {
-    // Create a new KeyPair from bytes
+    /// Create a new KeyPair from a secret key in hexadecimal format.
+    ///
+    /// Args:
+    ///     secret_key (str): A 64-character hexadecimal string representing the secret key.
+    ///
+    /// Returns:
+    ///     Keypair: A new Keypair instance.
+    ///
+    /// Raises:
+    ///     ValueError: If the secret key is not 64 hex characters long or invalid.
     #[staticmethod]
     fn from_secret_key(_py: Python, secret_key: &str) -> PyResult<Self> {
         if secret_key.len() != 64 {
@@ -62,6 +73,141 @@ where
         self.keypair.sign(signer_payload).into()
     }
 }
+
+/// A subscription to new blocks on the blockchain.
+///
+/// This class provides an asynchronous iterator over new blocks as they are finalized.
+///
+/// Example:
+///
+/// ```python
+/// async for block in subscription:
+///     print(block)
+/// ```
+#[pyclass]
+struct BlockSubscription {
+    blocks_stream: Arc<
+        tokio::sync::Mutex<
+            StreamOfResults<
+                Block<PolkadotConfig, OnlineClient<PolkadotConfig>>,
+            >,
+        >,
+    >,
+}
+
+#[pymethods]
+impl BlockSubscription {
+    /// Return the asynchronous iterator object.
+    fn __aiter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    /// Return the next block from the subscription.
+    ///
+    /// Yields a dictionary containing the block number, block hash, and a list of extrinsics.
+    fn __anext__<'a>(&self, py: Python<'a>) -> PyResult<Option<PyObject>> {
+        let blocks_stream = self.blocks_stream.clone();
+        let future = pyo3_asyncio::tokio::future_into_py(py, async move {
+            let mut blocks_stream = blocks_stream.lock().await;
+            match blocks_stream.next().await {
+                Some(block_result) => {
+                    let block = block_result.map_err(|e| {
+                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+                    })?;
+
+                    // Get block number and hash
+                    let block_number = block.header().number();
+                    let block_hash = block.hash();
+
+                    // Get the extrinsics
+                    let extrinsics = block.extrinsics().await.map_err(|e| {
+                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+                    })?;
+
+                    let mut extrinsics_info = vec![];
+
+                    for ext_result in extrinsics.iter() {
+                        let ext = ext_result.map_err(|e| {
+                            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+                        })?;
+
+                        // Get signed extensions
+                        let signed_extensions = match ext.signed_extensions() {
+                            Some(signed_extensions) => signed_extensions,
+                            None => continue, // Skip unsigned extrinsics
+                        };
+
+                        // Get metadata
+                        let meta = ext.extrinsic_metadata().map_err(|e| {
+                            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+                        })?;
+                        let pallet_name = meta.pallet.name();
+                        let call_name = &meta.variant.name;
+
+                        // Get field values
+                        let fields = ext.field_values().map_err(|e| {
+                            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+                        })?;
+
+                        // Convert fields to Python object
+                        let py_fields = Python::with_gil(|py| composite_to_py_object(py, &fields))?;
+
+                        // Collect signed extensions
+                        let py_signed_extensions = Python::with_gil(|py| -> PyResult<PyObject> {
+                            let mut ext_list = Vec::new();
+                            for se_result in signed_extensions.iter() {
+                                let se = match se_result {
+                                    Ok(se) => se,
+                                    Err(_) => continue,
+                                };
+                                let name = se.name();
+                                if ["CheckMortality", "CheckNonce", "ChargeTransactionPayment"].contains(&name) {
+                                    let value = match se.value() {
+                                        Ok(value) => value,
+                                        Err(_) => continue,
+                                    };
+                                    let value_py = decoded_value_to_py_object(py, &value)?;
+                                    let dict = PyDict::new(py);
+                                    dict.set_item("name", name)?;
+                                    dict.set_item("value", value_py)?;
+                                    ext_list.push(dict.to_object(py));
+                                }
+                            }
+                            Ok(PyList::new(py, ext_list).to_object(py))
+                        })?;
+
+                        // Collect extrinsic information
+                        let extrinsic_info = Python::with_gil(|py| -> PyResult<PyObject> {
+                            let dict = PyDict::new(py);
+                            dict.set_item("pallet", pallet_name)?;
+                            dict.set_item("call", call_name)?;
+                            dict.set_item("fields", py_fields)?;
+                            dict.set_item("signed_extensions", py_signed_extensions)?;
+                            Ok(dict.to_object(py))
+                        })?;
+
+                        extrinsics_info.push(extrinsic_info);
+                    }
+
+                    // Create a Python dictionary with block info
+                    let py_block_info = Python::with_gil(|py| -> PyResult<PyObject> {
+                        let dict = PyDict::new(py);
+                        dict.set_item("block_number", block_number)?;
+                        dict.set_item("block_hash", format!("{:?}", block_hash))?;
+                        dict.set_item("extrinsics", PyList::new(py, extrinsics_info))?;
+                        Ok(dict.to_object(py))
+                    })?;
+                    Ok(Some(py_block_info))
+                }
+                None => Err(PyErr::new::<pyo3::exceptions::PyStopAsyncIteration, _>(
+                    "No more blocks",
+                )),
+            }
+        });
+        Ok(Some(future?.into()))
+    }
+}
+
 
 // Define a Python class to handle iteration over storage results
 #[pyclass]
@@ -115,7 +261,13 @@ struct SubxtClient {
 
 #[pymethods]
 impl SubxtClient {
-    // Create a new SubxtClient instance asynchronously
+    /// Create a new SubxtClient instance asynchronously.
+    ///
+    /// Returns:
+    ///     SubxtClient: A new client connected to the default network.
+    ///
+    /// Raises:
+    ///     RuntimeError: If the client fails to connect.
     #[staticmethod]
     #[pyo3(name = "new")]
     fn py_new(py: Python<'_>) -> PyResult<&PyAny> {
@@ -129,7 +281,16 @@ impl SubxtClient {
         })
     }
 
-    // Create a new SubxtClient instance from a URL asynchronously
+    /// Create a new SubxtClient instance from a URL asynchronously.
+    ///
+    /// Args:
+    ///     url (str): The URL of the node to connect to.
+    ///
+    /// Returns:
+    ///     SubxtClient: A new client connected to the specified node.
+    ///
+    /// Raises:
+    ///     RuntimeError: If the client fails to connect.
     #[staticmethod]
     #[pyo3(name = "from_url")]
     fn from_url(py: Python<'_>, url: String) -> PyResult<&PyAny> {
@@ -159,7 +320,6 @@ impl SubxtClient {
         future_into_py(py, async move {
             let storage_query =
                 subxt::dynamic::storage(pallet_name, entry_name, values);
-
             let result = api
                 .storage()
                 .at_latest()
@@ -322,9 +482,37 @@ impl SubxtClient {
             Ok(hex_string)
         })
     }
+
+    /// Subscribe to new blocks on the blockchain asynchronously.
+    ///
+    /// Returns:
+    ///     BlockSubscription: An asynchronous iterator that yields blocks as they are finalized.
+    ///
+    /// Example:
+    ///
+    /// ```python
+    /// async for block in client.subscribe_new_blocks():
+    ///     print(block)
+    /// ```
+    ///
+    /// Raises:
+    ///     RuntimeError: If the subscription fails.
+    fn subscribe_new_blocks<'py>(&self, py: Python<'py>) -> PyResult<&'py PyAny> {
+        let blocks = self.api.blocks();
+        future_into_py(py, async move {
+            let blocks_sub = blocks.subscribe_finalized().await.map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+            })?;
+
+            Ok(BlockSubscription {
+                blocks_stream: Arc::new(tokio::sync::Mutex::new(blocks_sub)),
+            })
+        })
+    }
 }
 
 
+// Helper functions for converting values to Python objects
 fn py_object_to_value(item: &PyAny, address_use: AddressUse) -> PyResult<Value> {
     if let Ok(bytes) = item.downcast::<PyBytes>() {
         let bytes = bytes.as_bytes();
@@ -427,5 +615,6 @@ fn subxtpy(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<SubxtClient>()?;
     m.add_class::<StorageIterator>()?;
     m.add_class::<Keypair>()?;
+    m.add_class::<BlockSubscription>()?;
     Ok(())
 }
