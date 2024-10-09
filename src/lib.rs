@@ -22,7 +22,7 @@ enum AddressUse {
 
 /// A Keypair used for signing transactions.
 ///
-/// This class wraps an sr25519 keypair and provides methods to create a keypair from a secret key.
+/// This class wraps a sr25519 keypair and provides methods to create a keypair from a secret key.
 #[pyclass]
 #[derive(Clone)]
 struct Keypair {
