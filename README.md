@@ -24,7 +24,9 @@ pip install --upgrade subxtpy
 ### Local Testing 
 To build the library locally, [maturin](https://pypi.org/project/maturin/) needs to be installed:
 ```bash
-pip install maturin patchelf
+# For ubuntu, run the below first:
+# pip install patchelf
+pip install maturin
 ```
 The following command will build the package locally:
 ```bash
