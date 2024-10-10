@@ -11,7 +11,7 @@
 | Read Constants              | Fetch constants defined in the runtime metadata.                                                     | ✅             |
 | Call Runtime APIs           | Call runtime APIs and retrieve their results.                                                        | ✅             |
 | Dynamic Types               | Use dynamic types based on metadata for more flexible interactions.                                  | ✅             |
-| Subscribe to Blocks, events | Subscribe to new blocks and read the extrinsics and events.                                          | ⏳ (Upcoming) |
+| Subscribe to Blocks, events | Subscribe to new blocks and read the extrinsics and events.                                          | ✅ |
 
 ## Usage
 
@@ -22,8 +22,11 @@ The package has been published on [pypi](https://pypi.org/project/subxtpy/) and 
 pip install --upgrade subxtpy
 ```
 ### Local Testing 
-To build the library locally, [maturin](https://pypi.org/project/maturin/) needs to be installed. The following command will
-build the package locally:
+To build the library locally, [maturin](https://pypi.org/project/maturin/) needs to be installed:
+```bash
+pip install maturin patchelf
+```
+The following command will build the package locally:
 ```bash
 maturin develop
 ```
@@ -109,7 +112,7 @@ Contributions to `subxtpy` are welcome! If you encounter any issues or have sugg
 
 ## Real World Usage
 
-We will be providing guides for various real-world use cases here.
+[Here](https://github.com/philoniare/subxtpy-flask-example)'s a simple usage of the library with Flask to build an API for blockchain interaction.
 
 
 #### License
