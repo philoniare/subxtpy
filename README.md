@@ -19,7 +19,7 @@
 
 The package has been published on [pypi](https://pypi.org/project/subxtpy/) and can be installed by running:
 ```bash
-pip install subxtpy
+pip install --upgrade subxtpy
 ```
 ### Local Testing 
 To build the library locally, [maturin](https://pypi.org/project/maturin/) needs to be installed. The following command will
