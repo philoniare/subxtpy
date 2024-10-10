@@ -83,12 +83,10 @@ where
 ///
 /// This class provides an asynchronous iterator over new blocks as they are finalized.
 ///
-/// Example:
+/// .. code-block:: python
 ///
-/// ```python
-/// async for block in subscription:
-///     print(block)
-/// ```
+///     async for block in subscription:
+///         print(block)
 #[pyclass]
 struct BlockSubscription {
     blocks_stream: Arc<
@@ -582,18 +580,17 @@ impl SubxtClient {
 
     /// Subscribe to new blocks on the blockchain asynchronously.
     ///
-    /// Returns:
-    ///     BlockSubscription: An asynchronous iterator that yields blocks as they are finalized.
+    /// :returns: An asynchronous iterator that yields blocks as they are finalized.
+    /// :rtype: BlockSubscription
     ///
-    /// Example:
+    /// **Example:**
     ///
-    /// ```python
-    /// async for block in client.subscribe_new_blocks():
-    ///     print(block)
-    /// ```
+    /// .. code-block:: python
     ///
-    /// Raises:
-    ///     RuntimeError: If the subscription fails.
+    ///     async for block in subscription:
+    ///         print(block)
+    ///
+    /// :raises RuntimeError: If the subscription fails.
     fn subscribe_new_blocks<'py>(&self, py: Python<'py>) -> PyResult<&'py PyAny> {
         let blocks = self.api.blocks();
         future_into_py(py, async move {

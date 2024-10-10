@@ -44,13 +44,10 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A subscription to new blocks on the blockchain.</p>
 <p>This class provides an asynchronous iterator over new blocks as they are finalized.</p>
-<p>Example:</p>
-<p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
-async for block in subscription:</p>
-<blockquote>
-<div><p>print(block)</p>
-</div></blockquote>
-<p><a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">subscription</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py class">
@@ -58,17 +55,23 @@ async for block in subscription:</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">subxtpy.</span></span><span class="sig-name descname"><span class="pre">Keypair</span></span><a class="headerlink" href="#subxtpy.Keypair" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A Keypair used for signing transactions.</p>
-<p>This class wraps an sr25519 keypair and provides methods to create a keypair from a secret key.</p>
+<p>This class wraps a sr25519 keypair and provides methods to create a keypair from a secret key.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="subxtpy.Keypair.from_secret_key">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_secret_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">secret_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.Keypair.from_secret_key" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new Keypair from a secret key in hexadecimal format.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>secret_key (str): A 64-character hexadecimal string representing the secret key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>secret_key</strong> (<em>str</em>) – A 64-character hexadecimal string representing the secret key.</p>
 </dd>
-<dt>Returns:</dt><dd><p>Keypair: A new Keypair instance.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Keypair instance.</p>
 </dd>
-<dt>Raises:</dt><dd><p>ValueError: If the secret key is not 64 hex characters long or invalid.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#subxtpy.Keypair" title="subxtpy.Keypair">Keypair</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the secret key is not 64 hex characters long or invalid.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -94,13 +97,21 @@ constants, events, making runtime API calls, and submitting transactions.</p>
 <dt class="sig sig-object py" id="subxtpy.SubxtClient.constant">
 <span class="sig-name descname"><span class="pre">constant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pallet_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.SubxtClient.constant" title="Link to this definition">¶</a></dt>
 <dd><p>Fetch a constant value from the blockchain asynchronously.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>pallet_name (str): The name of the pallet.
-constant_name (str): The name of the constant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pallet_name</strong> (<em>str</em>) – The name of the pallet.</p></li>
+<li><p><strong>constant_name</strong> (<em>str</em>) – The name of the constant.</p></li>
+</ul>
 </dd>
-<dt>Returns:</dt><dd><p>Any: The value of the constant.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the constant.</p>
 </dd>
-<dt>Raises:</dt><dd><p>RuntimeError: If fetching the constant fails.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If fetching the constant fails.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -109,10 +120,15 @@ constant_name (str): The name of the constant.</p>
 <dt class="sig sig-object py" id="subxtpy.SubxtClient.events">
 <span class="sig-name descname"><span class="pre">events</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.SubxtClient.events" title="Link to this definition">¶</a></dt>
 <dd><p>Fetch events from the blockchain asynchronously.</p>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>list: A list of events, where each event is a dictionary containing pallet, variant, and fields.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of events, where each event is a dictionary containing pallet, variant, and fields.</p>
 </dd>
-<dt>Raises:</dt><dd><p>RuntimeError: If fetching events fails.</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If fetching events fails.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -121,12 +137,18 @@ constant_name (str): The name of the constant.</p>
 <dt class="sig sig-object py" id="subxtpy.SubxtClient.from_url">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.SubxtClient.from_url" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new SubxtClient instance from a URL asynchronously.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>url (str): The URL of the node to connect to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>url</strong> (<em>str</em>) – The URL of the node to connect to.</p>
 </dd>
-<dt>Returns:</dt><dd><p>SubxtClient: A new client connected to the specified node.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new client connected to the specified node.</p>
 </dd>
-<dt>Raises:</dt><dd><p>RuntimeError: If the client fails to connect.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#subxtpy.SubxtClient" title="subxtpy.SubxtClient">SubxtClient</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the client fails to connect.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -135,10 +157,15 @@ constant_name (str): The name of the constant.</p>
 <dt class="sig sig-object py" id="subxtpy.SubxtClient.new">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.SubxtClient.new" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new SubxtClient instance asynchronously.</p>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>SubxtClient: A new client connected to the default network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new client connected to the default network.</p>
 </dd>
-<dt>Raises:</dt><dd><p>RuntimeError: If the client fails to connect.</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#subxtpy.SubxtClient" title="subxtpy.SubxtClient">SubxtClient</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If the client fails to connect.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -147,14 +174,22 @@ constant_name (str): The name of the constant.</p>
 <dt class="sig sig-object py" id="subxtpy.SubxtClient.runtime_api_call">
 <span class="sig-name descname"><span class="pre">runtime_api_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pallet_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.SubxtClient.runtime_api_call" title="Link to this definition">¶</a></dt>
 <dd><p>Perform a runtime API call to the blockchain asynchronously.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>pallet_name (str): The name of the pallet.
-entry_name (str): The name of the runtime API function.
-key (list): A list of arguments for the runtime API call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pallet_name</strong> (<em>str</em>) – The name of the pallet.</p></li>
+<li><p><strong>entry_name</strong> (<em>str</em>) – The name of the runtime API function.</p></li>
+<li><p><strong>key</strong> (<em>list</em>) – A list of arguments for the runtime API call.</p></li>
+</ul>
 </dd>
-<dt>Returns:</dt><dd><p>Any: The result of the runtime API call.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result of the runtime API call.</p>
 </dd>
-<dt>Raises:</dt><dd><p>RuntimeError: If the runtime API call fails.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the runtime API call fails.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -163,15 +198,23 @@ key (list): A list of arguments for the runtime API call.</p>
 <dt class="sig sig-object py" id="subxtpy.SubxtClient.sign_and_submit">
 <span class="sig-name descname"><span class="pre">sign_and_submit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.SubxtClient.sign_and_submit" title="Link to this definition">¶</a></dt>
 <dd><p>Sign and submit a transaction to the blockchain asynchronously.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>from (Keypair): The keypair to sign the transaction.
-pallet_name (str): The name of the pallet.
-entry_name (str): The name of the extrinsic.
-payload (list): A list of arguments for the extrinsic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from</strong> (<a class="reference internal" href="#subxtpy.Keypair" title="subxtpy.Keypair"><em>Keypair</em></a>) – The keypair to sign the transaction.</p></li>
+<li><p><strong>pallet_name</strong> (<em>str</em>) – The name of the pallet.</p></li>
+<li><p><strong>entry_name</strong> (<em>str</em>) – The name of the extrinsic.</p></li>
+<li><p><strong>payload</strong> (<em>list</em>) – A list of arguments for the extrinsic.</p></li>
+</ul>
 </dd>
-<dt>Returns:</dt><dd><p>str: The transaction hash as a hexadecimal string.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The transaction hash as a hexadecimal string.</p>
 </dd>
-<dt>Raises:</dt><dd><p>RuntimeError: If signing or submitting the transaction fails.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If signing or submitting the transaction fails.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -180,15 +223,25 @@ payload (list): A list of arguments for the extrinsic.</p>
 <dt class="sig sig-object py" id="subxtpy.SubxtClient.storage">
 <span class="sig-name descname"><span class="pre">storage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pallet_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.SubxtClient.storage" title="Link to this definition">¶</a></dt>
 <dd><p>Fetch a storage entry from the blockchain asynchronously.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>pallet_name (str): The name of the pallet.
-entry_name (str): The name of the storage entry.
-key (list): A list of keys for the storage entry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pallet_name</strong> (<em>str</em>) – The name of the pallet.</p></li>
+<li><p><strong>entry_name</strong> (<em>str</em>) – The name of the storage entry.</p></li>
+<li><p><strong>key</strong> (<em>list</em>) – A list of keys for the storage entry.</p></li>
+</ul>
 </dd>
-<dt>Returns:</dt><dd><p>Any: The value of the storage entry.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the storage entry.</p>
 </dd>
-<dt>Raises:</dt><dd><p>RuntimeError: If fetching the storage entry fails.
-ValueError: If the storage entry is not found.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeError</strong> – If fetching the storage entry fails.</p></li>
+<li><p><strong>ValueError</strong> – If the storage entry is not found.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -197,14 +250,22 @@ ValueError: If the storage entry is not found.</p>
 <dt class="sig sig-object py" id="subxtpy.SubxtClient.storage_iter">
 <span class="sig-name descname"><span class="pre">storage_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pallet_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.SubxtClient.storage_iter" title="Link to this definition">¶</a></dt>
 <dd><p>Iterate over storage entries from the blockchain asynchronously.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>pallet_name (str): The name of the pallet.
-entry_name (str): The name of the storage entry.
-key (bytes): The prefix key for iteration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pallet_name</strong> (<em>str</em>) – The name of the pallet.</p></li>
+<li><p><strong>entry_name</strong> (<em>str</em>) – The name of the storage entry.</p></li>
+<li><p><strong>key</strong> (<em>bytes</em>) – The prefix key for iteration.</p></li>
+</ul>
 </dd>
-<dt>Returns:</dt><dd><p>StorageIterator: An asynchronous iterator over storage key-value pairs.</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An asynchronous iterator over storage key-value pairs.</p>
 </dd>
-<dt>Raises:</dt><dd><p>RuntimeError: If the iteration fails.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#subxtpy.StorageIterator" title="subxtpy.StorageIterator">StorageIterator</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the iteration fails.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -213,19 +274,22 @@ key (bytes): The prefix key for iteration.</p>
 <dt class="sig sig-object py" id="subxtpy.SubxtClient.subscribe_new_blocks">
 <span class="sig-name descname"><span class="pre">subscribe_new_blocks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#subxtpy.SubxtClient.subscribe_new_blocks" title="Link to this definition">¶</a></dt>
 <dd><p>Subscribe to new blocks on the blockchain asynchronously.</p>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>BlockSubscription: An asynchronous iterator that yields blocks as they are finalized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An asynchronous iterator that yields blocks as they are finalized.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#subxtpy.BlockSubscription" title="subxtpy.BlockSubscription">BlockSubscription</a></p>
 </dd>
 </dl>
-<p>Example:</p>
-<p><a href="#id9"><span class="problematic" id="id10">``</span></a><a href="#id11"><span class="problematic" id="id12">`</span></a>python
-async for block in client.subscribe_new_blocks():</p>
-<blockquote>
-<div><p>print(block)</p>
-</div></blockquote>
-<p><a href="#id13"><span class="problematic" id="id14">``</span></a><a href="#id15"><span class="problematic" id="id16">`</span></a></p>
-<dl class="simple">
-<dt>Raises:</dt><dd><p>RuntimeError: If the subscription fails.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">subscription</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If the subscription fails.</p>
 </dd>
 </dl>
 </dd></dl>
