@@ -9,20 +9,22 @@
       
       
       
+        <link rel="prev" href="../subxtclient/">
       
-        <link rel="next" href="keypair/">
+      
+        <link rel="next" href="../storageiterator/">
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.40">
     
     
       
-        <title>SubxtPy</title>
+        <title>BlockSubscription - SubxtPy</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.8c3ca2c6.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.8c3ca2c6.min.css">
       
       
 
@@ -41,9 +43,9 @@
       
     
     
-      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -62,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#subxtpy-documentation" class="md-skip">
+        <a href="#blocksubscription" class="md-skip">
           Skip to content
         </a>
       
@@ -78,7 +80,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="SubxtPy" class="md-header__button md-logo" aria-label="SubxtPy" data-md-component="logo">
+    <a href=".." title="SubxtPy" class="md-header__button md-logo" aria-label="SubxtPy" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -98,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              BlockSubscription
             
           </span>
         </div>
@@ -173,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="SubxtPy" class="md-nav__button md-logo" aria-label="SubxtPy" data-md-component="logo">
+    <a href=".." title="SubxtPy" class="md-nav__button md-logo" aria-label="SubxtPy" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -183,6 +185,66 @@
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keypair/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Keypair
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subxtclient/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SubxtClient
+  </span>
+  
+
+      </a>
+    </li>
+  
+
     
       
       
@@ -204,18 +266,18 @@
           
   
   <span class="md-ellipsis">
-    Home
+    BlockSubscription
   </span>
   
 
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="." class="md-nav__link md-nav__link--active">
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    Home
+    BlockSubscription
   </span>
   
 
@@ -237,11 +299,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#contents" class="md-nav__link">
+  <a href="#example-usage" class="md-nav__link">
     <span class="md-ellipsis">
-      Contents
+      Example Usage
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#__aiter__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __aiter__()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#__anext__-dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      __anext__() -&gt; dict
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -260,67 +355,7 @@
   
   
     <li class="md-nav__item">
-      <a href="keypair/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Keypair
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="subxtclient/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    SubxtClient
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="blocksubscription/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    BlockSubscription
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="storageiterator/" class="md-nav__link">
+      <a href="../storageiterator/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -360,11 +395,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#contents" class="md-nav__link">
+  <a href="#example-usage" class="md-nav__link">
     <span class="md-ellipsis">
-      Contents
+      Example Usage
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#__aiter__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __aiter__()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#__anext__-dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      __anext__() -&gt; dict
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -383,14 +451,41 @@
                   
 
 
-<h1 id="subxtpy-documentation">SubxtPy Documentation</h1>
-<p>Welcome to the SubxtPy documentation. SubxtPy is a Python library for interacting with Substrate-based blockchains using the <code>subxt</code> Rust library via <code>pyo3</code>. It provides asynchronous methods to interact with the blockchain, including fetching storage entries, constants, events, making runtime API calls, and submitting transactions.</p>
-<h2 id="contents">Contents</h2>
+<h1 id="blocksubscription">BlockSubscription</h1>
+<p>A subscription to new blocks on the blockchain.</p>
+<p>This class provides an asynchronous iterator over new blocks as they are finalized.</p>
+<h2 id="example-usage">Example Usage</h2>
+<pre><code class="language-python">import asyncio
+from subxtpy import SubxtClient
+
+async def main():
+    client = await SubxtClient.new()
+    subscription = await client.subscribe_new_blocks()
+    async for block in subscription:
+        print(f&quot;Block Number: {block['block_number']}&quot;)
+        print(f&quot;Block Hash: {block['block_hash']}&quot;)
+        print(&quot;Extrinsics:&quot;)
+        for extrinsic in block['extrinsics']:
+            print(extrinsic)
+
+asyncio.run(main())
+</code></pre>
+<h2 id="methods">Methods</h2>
+<h3 id="__aiter__"><code>__aiter__()</code></h3>
+<p>Return the asynchronous iterator object.</p>
+<p><strong>Usage:</strong></p>
+<pre><code class="language-python">async for block in subscription:
+    # process block
+</code></pre>
+<h3 id="__anext__-dict"><code>__anext__() -&gt; dict</code></h3>
+<p>Return the next block from the subscription.</p>
+<p><strong>Yields:</strong></p>
 <ul>
-<li><a href="keypair/">Keypair</a></li>
-<li><a href="subxtclient/">SubxtClient</a></li>
-<li><a href="blocksubscription/">BlockSubscription</a></li>
-<li><a href="storageiterator/">StorageIterator</a></li>
+<li><code>dict</code>: A dictionary containing the block number, block hash, and a list of extrinsics.</li>
+</ul>
+<p><strong>Raises:</strong></p>
+<ul>
+<li><code>StopAsyncIteration</code>: When no more blocks are available.</li>
 </ul>
 
 
@@ -438,10 +533,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.525ec568.min.js"></script>
+      <script src="../assets/javascripts/bundle.525ec568.min.js"></script>
       
     
   </body>

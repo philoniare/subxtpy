@@ -1,0 +1,14 @@
+site_name: SubxtPy
+docs_dir: docs_src
+theme:
+  name: material
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+nav:
+  - Home: index.md
+  - Keypair: keypair.md
+  - SubxtClient: subxtclient.md
+  - BlockSubscription: blocksubscription.md
+  - StorageIterator: storageiterator.md
